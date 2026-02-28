@@ -22,7 +22,7 @@ provider "aws" {
 }
 
 module "networking" {
-  source = "./modules/networking" 
+  source = "./modules/networking"
 
   project_name        = var.project_name
   aws_region          = var.aws_region
@@ -62,7 +62,7 @@ module "compute" {
   ec2_security_group_id  = module.security.ec2_security_group_id
 
   # ADD THESE TWO:
-  
+
   db_proxy_endpoint = module.database.rds_proxy_endpoint
   redis_endpoint    = module.database.redis_endpoint
   db_secret_arn     = module.database.db_secret_arn
