@@ -22,7 +22,7 @@ provider "aws" {
 }
 
 module "networking" {
-  source = "./modules/networking"
+  source = "../../modules/networking"
 
   project_name        = var.project_name
   aws_region          = var.aws_region
@@ -34,14 +34,14 @@ module "networking" {
 }
 
 module "security" {
-  source = "./modules/security"
+  source = "../../modules/security"
 
   project_name = var.project_name
   vpc_id       = module.networking.vpc_id
 }
 
 module "database" {
-  source = "./modules/database"
+  source = "../../modules/database"
 
   project_name                  = var.project_name
   private_data_subnet_ids       = module.networking.private_data_subnet_ids
@@ -51,7 +51,7 @@ module "database" {
 }
 
 module "compute" {
-  source = "./modules/compute"
+  source = "../../modules/compute"
 
   project_name           = var.project_name
   environment            = "dev"
