@@ -9,7 +9,7 @@ variable "aws_account_id" {
 
 variable "aws_region" {
   type    = string
-  default = "us-east-1"
+  default = "af-south-1"
 }
 
 variable "vpc_cidr" {
@@ -19,7 +19,7 @@ variable "vpc_cidr" {
 
 variable "availability_zones" {
   type    = list(string)
-  default = ["us-east-1a", "us-east-1b"]
+  default = ["af-south-1a", "af-south-1b"]
 }
 
 variable "public_subnet_cidrs" {

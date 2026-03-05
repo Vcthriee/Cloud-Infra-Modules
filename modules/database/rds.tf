@@ -86,6 +86,9 @@ resource "aws_db_instance" "primary" {
 # RDS READ REPLICA - READ SCALING
 # Offload read traffic from primary
 
+# RDS READ REPLICA - READ SCALING
+# Offload read traffic from primary
+
 resource "aws_db_instance" "replica" {
   identifier = "${var.project_name}-postgres-replica"
 
@@ -113,4 +116,6 @@ resource "aws_db_instance" "replica" {
   tags = {
     Name = "${var.project_name}-postgres-replica"
   }
+
+  depends_on = [aws_db_instance.primary]
 }
