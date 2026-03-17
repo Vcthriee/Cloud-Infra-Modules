@@ -23,5 +23,14 @@ override.tf.json
 .vscode/
 
 # Logs
+
 *.log
 .terraform.lock.hcl
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+tfplan 
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+tfplan

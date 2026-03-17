@@ -5,7 +5,7 @@
 # The secret container
 resource "aws_secretsmanager_secret" "db_password" {
   # Unique name for this secret
-  name = "${var.project_name}-db-master-password"
+  name = "${var.project_name}-db-mastarr-password"
   
   description = "Master password for RDS PostgreSQL"
   
@@ -27,12 +27,12 @@ resource "aws_secretsmanager_secret_version" "db_password" {
   # JSON format for structured data
   secret_string = jsonencode({
     username = var.db_username
-    password = random_password.db_master.result
+    password = random_password.db_mastarr.result
   })
 }
 
 # Generate cryptographically secure random password
-resource "random_password" "db_master" {
+resource "random_password" "db_mastarr" {
   length  = 32  # 32 characters
   
   # Include special characters
