@@ -1,5 +1,8 @@
-
 variable "project_name" {
+  type = string
+}
+
+variable "aws_region" {
   type = string
 }
 
@@ -23,10 +26,9 @@ variable "alb_security_group_id" {
   type = string
 }
 
-variable "ec2_security_group_id" {
+variable "ecs_security_group_id" {
   type = string
 }
-
 
 variable "db_proxy_endpoint" {
   type = string
@@ -40,22 +42,35 @@ variable "db_secret_arn" {
   type = string
 }
 
-variable "instance_type" {
+variable "ecs_cpu" {
   type    = string
-  default = "t3.micro"
+  default = "256"
 }
 
-variable "asg_min_size" {
+variable "ecs_memory" {
+  type    = string
+  default = "1024" 
+}
+
+variable "ecs_desired_count" {
   type    = number
   default = 2
 }
 
-variable "asg_max_size" {
+variable "ecs_min_count" {
   type    = number
-  default = 6
+  default = 1
 }
 
-variable "asg_desired_capacity" {
+variable "ecs_max_count" {
   type    = number
-  default = 2
-}
+  default = 10
+} 
+
+variable "db_name" { type = string }
+
+variable "db_username" { type = string }
+
+variable "db_password" { type = string }
+
+variable "jwt_secret" { type = string }
