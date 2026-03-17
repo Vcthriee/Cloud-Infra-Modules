@@ -35,6 +35,24 @@ variable "private_app_cidrs" {
 variable "private_data_cidrs" {
   type    = list(string)
   default = ["10.0.5.0/24", "10.0.6.0/24"]
+} 
+
+variable "db_name" {
+  type    = string
+  default = "ecommerce"
 }
 
+variable "db_username" {
+  type    = string
+  default = "dbadmin"
+}
 
+variable "db_password" {
+  type    = string
+  default = "changeme123"
+}
+
+variable "jwt_secret" {
+  type    = string
+  default = "dev-secret-change-in-production"
+}
