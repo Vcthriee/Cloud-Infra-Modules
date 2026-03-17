@@ -50,20 +50,25 @@ module "database" {
   elasticache_security_group_id = module.security.elasticache_security_group_id
 }
 
-module "compute" {
-  source = "../../modules/compute"
+module "ecs" {
+  source = "../../modules/ecs"
 
   project_name           = var.project_name
+  aws_region             = var.aws_region
   environment            = "dev"
   vpc_id                 = module.networking.vpc_id
   public_subnet_ids      = module.networking.public_subnet_ids
   private_app_subnet_ids = module.networking.private_app_subnet_ids
   alb_security_group_id  = module.security.alb_security_group_id
-  ec2_security_group_id  = module.security.ec2_security_group_id
-
-  # ADD THESE TWO:
+  ecs_security_group_id  = module.security.ecs_security_group_id
 
   db_proxy_endpoint = module.database.rds_proxy_endpoint
   redis_endpoint    = module.database.redis_endpoint
   db_secret_arn     = module.database.db_secret_arn
+  
+  # Add these new ones
+  db_name     = var.db_name
+  db_username = var.db_username
+  db_password = var.db_password
+  jwt_secret  = var.jwt_secret
 }
