@@ -1,67 +1,80 @@
 name: Terraform Deploy
+
 on:
   push:
     branches:
       - main
       - dev
+
+# Permissions needed for OIDC authentication with AWS
 permissions:
   id-token: write
   contents: read
+
 jobs:
   terraform:
     runs-on: ubuntu-latest
+
+    # All terraform commands run from the dev environment folder
     defaults:
       run:
         working-directory: envs/dev
+
     steps:
+      # Step 1: Check out the repository code
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Step 2: Authenticate to AWS using OIDC (no static credentials needed)
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::904690835870:role/GithubActionsOIDCROLE
           aws-region: af-south-1
 
+      # Step 3: Install the specified version of Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
 
+      # Step 4: Initialize Terraform — downloads providers and sets up backend
       - name: Terraform Init
         run: terraform init
 
+      # Step 5: Check all .tf files are correctly formatted
+      # Fails if any file needs formatting — run 'terraform fmt' locally to fix
       - name: Terraform Format Check
         run: terraform fmt -check
 
+      # Step 6: Validate the Terraform configuration is syntactically correct
       - name: Terraform Validate
         run: terraform validate
 
-      # CHANGED — removed -var-file, added env block with secrets
-      - name: Terraform Plan
-        env:
-          TF_VAR_project_name: ${{ secrets.TF_VAR_project_name }}
-          TF_VAR_aws_account_id: ${{ secrets.TF_VAR_aws_account_id }}
-          TF_VAR_aws_region: ${{ secrets.TF_VAR_aws_region }}
-          TF_VAR_vpc_cidr: ${{ secrets.TF_VAR_vpc_cidr }}
-          TF_VAR_db_password: ${{ secrets.TF_VAR_db_password }}
-          TF_VAR_availability_zones: ${{ secrets.TF_VAR_availability_zones }}
-          TF_VAR_public_subnet_cidrs: ${{ secrets.TF_VAR_public_subnet_cidrs }}
-          TF_VAR_private_app_cidrs: ${{ secrets.TF_VAR_private_app_cidrs }}
-          TF_VAR_private_data_cidrs: ${{ secrets.TF_VAR_private_data_cidrs }}
-        run: terraform plan -out=tfplan
+      # Step 7: Build the tfvars file from GitHub secrets at runtime
+      # Lists can't be passed as TF_VAR_ env vars so we write the file directly
+      # Sensitive values come from secrets, lists are hardcoded (not sensitive)
+      - name: Create tfvars file
+        run: |
+          cat > terraform.auto.tfvars <<EOF
+          project_name        = "${{ secrets.TF_VAR_project_name }}"
+          aws_account_id      = "${{ secrets.TF_VAR_aws_account_id }}"
+          aws_region          = "${{ secrets.TF_VAR_aws_region }}"
+          vpc_cidr            = "${{ secrets.TF_VAR_vpc_cidr }}"
+          db_password         = "${{ secrets.TF_VAR_db_password }}"
+          availability_zones  = ["af-south-1a", "af-south-1b"]
+          public_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
+          private_app_cidrs   = ["10.0.3.0/24", "10.0.4.0/24"]
+          private_data_cidrs  = ["10.0.5.0/24", "10.0.6.0/24"]
+          EOF
 
-      # CHANGED — added same env block, apply command unchanged
+      # Step 8: Generate an execution plan and save it to tfplan
+      # Runs on both dev and main — safe, no changes are made to infrastructure
+      - name: Terraform Plan
+        run: terraform plan -var-file="terraform.auto.tfvars" -out=tfplan
+
+      # Step 9: Apply the saved plan — only runs on main branch
+      # This is the only step that makes real changes to your AWS infrastructure
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
-        env:
-          TF_VAR_project_name: ${{ secrets.TF_VAR_project_name }}
-          TF_VAR_aws_account_id: ${{ secrets.TF_VAR_aws_account_id }}
-          TF_VAR_aws_region: ${{ secrets.TF_VAR_aws_region }}
-          TF_VAR_vpc_cidr: ${{ secrets.TF_VAR_vpc_cidr }}
-          TF_VAR_db_password: ${{ secrets.TF_VAR_db_password }}
-          TF_VAR_availability_zones: ${{ secrets.TF_VAR_availability_zones }}
-          TF_VAR_public_subnet_cidrs: ${{ secrets.TF_VAR_public_subnet_cidrs }}
-          TF_VAR_private_app_cidrs: ${{ secrets.TF_VAR_private_app_cidrs }}
-          TF_VAR_private_data_cidrs: ${{ secrets.TF_VAR_private_data_cidrs }}
         run: terraform apply -auto-approve tfplan
