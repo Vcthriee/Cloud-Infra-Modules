@@ -52,16 +52,22 @@ jobs:
         run: terraform validate
 
       # Step 7: Build the tfvars file from GitHub secrets at runtime
-      # Lists can't be passed as TF_VAR_ env vars so we write the file directly
-      # Sensitive values come from secrets, lists are hardcoded (not sensitive)
+      # Secrets are loaded into env vars first — heredoc can't read secrets directly
+      # Lists are hardcoded here since they are not sensitive values
       - name: Create tfvars file
+        env:
+          PROJECT_NAME: ${{ secrets.TF_VAR_project_name }}
+          AWS_ACCOUNT_ID: ${{ secrets.TF_VAR_aws_account_id }}
+          AWS_REGION: ${{ secrets.TF_VAR_aws_region }}
+          VPC_CIDR: ${{ secrets.TF_VAR_vpc_cidr }}
+          DB_PASSWORD: ${{ secrets.TF_VAR_db_password }}
         run: |
           cat > terraform.auto.tfvars <<EOF
-          project_name        = "${{ secrets.TF_VAR_project_name }}"
-          aws_account_id      = "${{ secrets.TF_VAR_aws_account_id }}"
-          aws_region          = "${{ secrets.TF_VAR_aws_region }}"
-          vpc_cidr            = "${{ secrets.TF_VAR_vpc_cidr }}"
-          db_password         = "${{ secrets.TF_VAR_db_password }}"
+          project_name        = "${PROJECT_NAME}"
+          aws_account_id      = "${AWS_ACCOUNT_ID}"
+          aws_region          = "${AWS_REGION}"
+          vpc_cidr            = "${VPC_CIDR}"
+          db_password         = "${DB_PASSWORD}"
           availability_zones  = ["af-south-1a", "af-south-1b"]
           public_subnet_cidrs = ["10.0.1.0/24", "10.0.2.0/24"]
           private_app_cidrs   = ["10.0.3.0/24", "10.0.4.0/24"]
