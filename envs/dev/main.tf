@@ -65,7 +65,7 @@ module "ecs" {
   db_proxy_endpoint = module.database.rds_proxy_endpoint
   redis_endpoint    = module.database.redis_endpoint
   db_secret_arn     = module.database.db_secret_arn
-  jwt_secret_arn    = module.database.jwt_secret_arn  # CHANGED: was jwt_secret
+  jwt_secret_arn    = module.database.jwt_secret_arn # CHANGED: was jwt_secret
 
   db_name     = var.db_name
   db_username = var.db_username
