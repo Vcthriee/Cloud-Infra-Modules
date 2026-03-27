@@ -5,7 +5,7 @@
 # The secret container
 resource "aws_secretsmanager_secret" "db_password" {
   # Unique name for this secret
-  name = "${var.project_name}-db-mastarr-password"
+  name = "${var.project_name}-db-master-password"
   
   description = "Master password for RDS PostgreSQL"
   
@@ -27,12 +27,12 @@ resource "aws_secretsmanager_secret_version" "db_password" {
   # JSON format for structured data
   secret_string = jsonencode({
     username = var.db_username
-    password = random_password.db_mastarr.result
+    password = random_password.db_master.result
   })
 }
 
 # Generate cryptographically secure random password
-resource "random_password" "db_mastarr" {
+resource "random_password" "db_master" {
   length  = 32  # 32 characters
   
   # Include special characters
@@ -42,4 +42,26 @@ resource "random_password" "db_mastarr" {
   override_special = "!#$%&*()-_=+[]{}<>:?"
   
   # Result: something like "xK9#mP2$vL5@nQ8..."
+} 
+
+# JWT SECRET - FOR APPLICATION AUTHENTICATION
+resource "random_password" "jwt" {
+  length  = 64
+  special = true
+}
+
+resource "aws_secretsmanager_secret" "jwt" {
+  name        = "${var.project_name}-jwt-secret"
+  description = "JWT signing secret for application authentication"
+  
+  recovery_window_in_days = 7
+
+  tags = {
+    Name = "${var.project_name}-jwt-secret"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "jwt" {
+  secret_id     = aws_secretsmanager_secret.jwt.id
+  secret_string = random_password.jwt.result
 }

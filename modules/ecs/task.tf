@@ -1,3 +1,4 @@
+
 resource "aws_ecs_task_definition" "app" {
   family                   = "${var.project_name}-task"
   network_mode             = "awsvpc"
@@ -11,12 +12,15 @@ resource "aws_ecs_task_definition" "app" {
     {
       name  = "app"
       image = "${aws_ecr_repository.app.repository_url}:latest"
+
       portMappings = [
         {
           containerPort = 80
           protocol      = "tcp"
         }
       ]
+
+      # Non-sensitive config passed as plain environment variables
       environment = [
         {
           name  = "DB_PROXY_ENDPOINT"
@@ -39,18 +43,24 @@ resource "aws_ecs_task_definition" "app" {
           value = var.db_username
         },
         {
-          name  = "DB_PASSWORD"
-          value = var.db_password
-        },
-        {
-          name  = "JWT_SECRET"
-          value = var.jwt_secret
-        },
-        {
           name  = "PORT"
           value = "80"
         }
       ]
+
+      # Sensitive values — ECS reads these from Secrets Manager at runtime
+      # Only the ARN is stored here, never the actual value
+      secrets = [
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = var.db_secret_arn
+        },
+        {
+          name      = "JWT_SECRET"
+          valueFrom = var.jwt_secret_arn
+        }
+      ]
+
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -59,6 +69,7 @@ resource "aws_ecs_task_definition" "app" {
           awslogs-stream-prefix = "ecs"
         }
       }
+
       healthCheck = {
         command     = ["CMD-SHELL", "curl -f http://localhost:80/health || exit 1"]
         interval    = 30

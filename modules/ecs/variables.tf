@@ -1,3 +1,4 @@
+
 variable "project_name" {
   type = string
 }
@@ -38,7 +39,15 @@ variable "redis_endpoint" {
   type = string
 }
 
+# ARN of the database secret in Secrets Manager
+# ECS reads the actual password from here at runtime
 variable "db_secret_arn" {
+  type = string
+}
+
+# ARN of the JWT secret in Secrets Manager
+# ECS reads the actual JWT secret from here at runtime
+variable "jwt_secret_arn" {
   type = string
 }
 
@@ -49,7 +58,7 @@ variable "ecs_cpu" {
 
 variable "ecs_memory" {
   type    = string
-  default = "1024" 
+  default = "1024"
 }
 
 variable "ecs_desired_count" {
@@ -65,12 +74,12 @@ variable "ecs_min_count" {
 variable "ecs_max_count" {
   type    = number
   default = 10
-} 
+}
 
-variable "db_name" { type = string }
+variable "db_name" {
+  type = string
+}
 
-variable "db_username" { type = string }
-
-variable "db_password" { type = string }
-
-variable "jwt_secret" { type = string }
+variable "db_username" {
+  type = string
+}

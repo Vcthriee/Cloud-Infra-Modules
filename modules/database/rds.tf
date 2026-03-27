@@ -55,7 +55,7 @@ resource "aws_db_instance" "primary" {
   # Database name and credentials
   db_name  = var.db_name
   username = var.db_username
-  password = random_password.db_mastarr.result  
+  password = random_password.db_master.result  
 
   # High availability - standby in different AZ
   multi_az = true
