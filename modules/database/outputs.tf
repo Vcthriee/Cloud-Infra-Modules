@@ -32,4 +32,4 @@ output "rds_instance_id" {
 output "elasticache_id" {
   description = "ElastiCache replication group ID for CloudWatch"
   value       = aws_elasticache_replication_group.main.id
-} 
+}
