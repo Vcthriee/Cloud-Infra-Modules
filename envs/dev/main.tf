@@ -65,9 +65,30 @@ module "ecs" {
   db_proxy_endpoint = module.database.rds_proxy_endpoint
   redis_endpoint    = module.database.redis_endpoint
   db_secret_arn     = module.database.db_secret_arn
-  jwt_secret_arn    = module.database.jwt_secret_arn # CHANGED: was jwt_secret
-
-  db_name     = var.db_name
-  db_username = var.db_username
+  jwt_secret_arn    = aws_secretsmanager_secret.jwt_secret.arn
+  db_name           = var.db_name
+  db_username       = var.db_username
   # REMOVED: db_password and jwt_secret - ECS reads from Secrets Manager instead
+}
+
+# JWT SECRET - FOR APPLICATION AUTHENTICATION
+resource "random_password" "jwt" {
+  length  = 64
+  special = true
+}
+
+resource "aws_secretsmanager_secret" "jwt_secret" {
+  name        = "${var.project_name}-jwt-secret"
+  description = "JWT signing secret for application authentication"
+
+  recovery_window_in_days = 7
+
+  tags = {
+    Name = "${var.project_name}-jwt-secret"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "jwt_secret" {
+  secret_id     = aws_secretsmanager_secret.jwt_secret.id
+  secret_string = random_password.jwt.result
 }

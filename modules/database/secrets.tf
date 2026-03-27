@@ -42,26 +42,4 @@ resource "random_password" "db_master" {
   override_special = "!#$%&*()-_=+[]{}<>:?"
   
   # Result: something like "xK9#mP2$vL5@nQ8..."
-} 
-
-# JWT SECRET - FOR APPLICATION AUTHENTICATION
-resource "random_password" "jwt" {
-  length  = 64
-  special = true
-}
-
-resource "aws_secretsmanager_secret" "jwt" {
-  name        = "${var.project_name}-jwt-secret"
-  description = "JWT signing secret for application authentication"
-  
-  recovery_window_in_days = 7
-
-  tags = {
-    Name = "${var.project_name}-jwt-secret"
-  }
-}
-
-resource "aws_secretsmanager_secret_version" "jwt" {
-  secret_id     = aws_secretsmanager_secret.jwt.id
-  secret_string = random_password.jwt.result
 }

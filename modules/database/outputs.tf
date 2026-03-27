@@ -32,9 +32,4 @@ output "rds_instance_id" {
 output "elasticache_id" {
   description = "ElastiCache replication group ID for CloudWatch"
   value       = aws_elasticache_replication_group.main.id
-} 
-
-output "jwt_secret_arn" {
-  description = "Secrets Manager ARN for JWT secret"
-  value       = aws_secretsmanager_secret.jwt.arn
 }
