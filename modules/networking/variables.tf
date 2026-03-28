@@ -9,7 +9,7 @@ variable "project_name" {
 variable "aws_region" {
   description = "AWS region for resources"
   type        = string
-  default     = "us-east-1"
+  default     = "af-south-1"
 }
 
 variable "vpc_cidr" {
@@ -21,7 +21,7 @@ variable "vpc_cidr" {
 variable "availability_zones" {
   description = "List of AZs to use"
   type        = list(string)
-  default     = ["us-east-1a", "us-east-1b"]
+  default     = ["af-south-1a", "af-south-1b"]
 }
 
 variable "public_subnet_cidrs" {
