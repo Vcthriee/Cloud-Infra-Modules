@@ -90,11 +90,13 @@ resource "aws_db_instance" "primary" {
 # RDS READ REPLICA - READ SCALING
 # Offload read traffic from primary
 
+# RDS READ REPLICA - READ SCALING
+# Offload read traffic from primary
 resource "aws_db_instance" "replica" {
   identifier = "${var.project_name}-postgres-replica"
 
-  # Replicate from primary instance
-  replicate_source_db = aws_db_instance.primary.arn
+  # Use identifier instead of ARN - forces Terraform to wait
+  replicate_source_db = aws_db_instance.primary.identifier
 
   instance_class = var.db_instance_class
   
@@ -103,15 +105,10 @@ resource "aws_db_instance" "replica" {
   vpc_security_group_ids = [var.rds_security_group_id]
   parameter_group_name   = aws_db_parameter_group.main.name
 
-  # No backups on replica (uses primary's backups)
   backup_retention_period = 0
-  
-  # Single AZ is fine for replica (can recreate from primary)
   multi_az = false
 
   enabled_cloudwatch_logs_exports = ["postgresql"]
-
-  # Skip final snapshot for easier destroy during development
   skip_final_snapshot = true
 
   tags = {
