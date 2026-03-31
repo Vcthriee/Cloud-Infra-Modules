@@ -1,7 +1,5 @@
-
 # RDS SUBNET GROUP - DATABASE PLACEMENT
 # Requires subnets in at least 2 AZs for Multi-AZ
-
 resource "aws_db_subnet_group" "main" {
   name       = "${var.project_name}-db-subnet-group"
   subnet_ids = var.private_data_subnet_ids
@@ -13,18 +11,13 @@ resource "aws_db_subnet_group" "main" {
 
 # RDS PARAMETER GROUP - DATABASE CONFIGURATION
 # Custom settings for PostgreSQL
-
 resource "aws_db_parameter_group" "main" {
-  # Unique name
-  name = "${var.project_name}-postgres-params"
-  
-  # PostgreSQL version family
+  name   = "${var.project_name}-postgres-params"
   family = "postgres18"
 
-  # Log slow queries (> 1 second) for optimization
   parameter {
     name  = "log_min_duration_statement"
-    value = "1000"  # milliseconds
+    value = "1000"
   }
 
   tags = {
@@ -34,49 +27,34 @@ resource "aws_db_parameter_group" "main" {
 
 # RDS PRIMARY INSTANCE - POSTGRESQL DATABASE
 # Multi-AZ enabled for automatic failover
-
 resource "aws_db_instance" "primary" {
-  # Unique identifier for this database
   identifier = "${var.project_name}-postgres-primary"
 
-  # Engine and version
   engine         = "postgres"
   engine_version = "18.2"
-  
-  # Instance size (t3.micro = free tier eligible)
   instance_class = var.db_instance_class
 
-  # Storage configuration
-  allocated_storage     = var.db_allocated_storage      # Start at 20 GB
-  max_allocated_storage = var.db_max_allocated_storage  # Grow to 100 GB
-  storage_type          = "gp3"  # SSD, better than gp2
-  storage_encrypted     = true   # Encryption at rest
+  allocated_storage     = var.db_allocated_storage
+  max_allocated_storage = var.db_max_allocated_storage
+  storage_type          = "gp3"
+  storage_encrypted     = true
   
-  # Database name and credentials
   db_name  = var.db_name
   username = var.db_username
   password = random_password.db_master.result  
 
-  # High availability - standby in different AZ
   multi_az = true
 
-  # Network placement
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [var.rds_security_group_id]
   parameter_group_name   = aws_db_parameter_group.main.name
 
-  # Backup configuration
-  backup_retention_period = 35   # Keep 35 days of backups
-  backup_window           = "03:00-04:00"  # 3-4 AM UTC
-  maintenance_window      = "Mon:04:00-Mon:05:00"  # After backup
+  backup_retention_period = 35
+  backup_window           = "03:00-04:00"
+  maintenance_window      = "Mon:04:00-Mon:05:00"
 
-  # Logging
   enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
-  
-  # Protection
   deletion_protection = false 
-  
-  # Skip final snapshot for easier destroy during development
   skip_final_snapshot = true
 
   tags = {
@@ -84,11 +62,13 @@ resource "aws_db_instance" "primary" {
   }
 }
 
-# RDS READ REPLICA - READ SCALING
-# Offload read traffic from primary
-
-# RDS READ REPLICA - READ SCALING
-# Offload read traffic from primary
+# NEW: Wait for primary to be fully available before creating replica
+# This forces Terraform to wait 10 minutes after primary creation
+# RDS needs this time to be ready for replication
+resource "time_sleep" "wait_for_primary" {
+  depends_on = [aws_db_instance.primary]
+  create_duration = "10m"
+}
 
 # RDS READ REPLICA - READ SCALING
 # Offload read traffic from primary
@@ -99,7 +79,6 @@ resource "aws_db_instance" "replica" {
   replicate_source_db = aws_db_instance.primary.identifier
 
   instance_class = var.db_instance_class
-  
   storage_encrypted = true
 
   vpc_security_group_ids = [var.rds_security_group_id]
@@ -115,5 +94,7 @@ resource "aws_db_instance" "replica" {
     Name = "${var.project_name}-postgres-replica"
   }
 
-  depends_on = [aws_db_instance.primary]
+  # CHANGED: Now depends on time_sleep, not just primary
+  # This ensures 10 minute wait before replica creation
+  depends_on = [time_sleep.wait_for_primary]
 }
